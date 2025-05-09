@@ -1,0 +1,153 @@
+img_backbone:
+  type: 'SwinTransformer'
+  embed_dims: 96
+  depths: [2, 2, 6, 2]
+  num_heads: [3, 6, 12, 24]
+  window_size: 7
+  mlp_ratio: 4
+  qkv_bias: true
+  qk_scale: null
+  drop_rate: 0.
+  attn_drop_rate: 0.
+  drop_path_rate: 0.2
+  patch_norm: true
+  out_indices: [1, 2, 3]
+  with_cp: false
+  convert_weights: true
+  init_cfg:
+    type: Pretrained
+    checkpoint: https://github.com/SwinTransformer/storage/releases/download/v1.0.0/swin_tiny_patch4_window7_224.pth
+
+
+img_neck:
+  type: 'FPN'
+  in_channels: [192, 384, 768]
+  out_channels: 256
+  num_outs: 3
+
+deepth_lss:
+  in_channels: 256
+  out_channels: 256
+  image_size: [270, 480]
+  feature_size: [34, 60]
+  xbound: [-51.2, 51.2, 0.4]
+  ybound: [-51.2, 51.2, 0.4]
+  zbound: [-10.0, 10.0, 20.0]
+  dbound: [1.0, 60.0, 0.5]
+  downsample: 2
+
+voxelization:
+  voxel_size: [0.1, 0.1, 0.2]
+  point_cloud_range: [-54.0, -54.0, -5.0, 54.0, 54.0, 3.0]
+  max_num_points: 10
+  max_voxels: [120000, 200000]
+  deterministic: True
+  voxelize_reduce: True
+
+pts_encoder:
+  sparse_shape: [1024, 1024, 41]
+  in_channels: 4
+  order:
+    - 'conv'
+    - 'norm'
+    - 'act'
+  norm_cfg:
+    type: 'BN1d'
+    eps: 0.001
+    momentum: 0.01
+  block_type: 'basicblock'
+
+fusion:
+  type: 'ConvFuser'
+  in_channels: [256, 256]
+  out_channels: 256
+
+decoder:
+  backbone:
+    in_channels: 256
+    out_channels: [128, 128, 256]
+    layer_nums: [3, 5, 5]
+    layer_strides: [2, 2, 2]
+    norm_cfg:
+      type: 'BN'
+      eps: 0.001
+      momentum: 0.01
+    conv_cfg:
+      type: 'Conv2d'
+      bias: False
+  neck:
+    in_channels: [128, 128, 256]
+    out_channels: [256, 256, 256]
+    upsample_strides: [1, 2, 4]
+    norm_cfg:
+      type: 'BN'
+      eps: 0.001
+      momentum: 0.01
+    conv_cfg:
+      type: 'Conv2d'
+      bias: False
+
+class_names: ['LongVehicle', 'Car', 'PoliceCar', 'Child', 'RoadWorker', 'Pedestrian', 'Scooter', 'ScooterRider', 'Motorcycle', 'MotorcyleRider', 'BicycleRider', 'Truck', 'Van', 'TrashCan', 'ConcreteTruck', 'Bus']
+
+head:
+  tasks:
+    - num_classes: 3
+      class_names: ['LongVehicle', 'Car', 'PoliceCar']
+    - num_classes: 8
+      class_names: ['Child', 'RoadWorker', 'Pedestrian', 'Scooter', 'ScooterRider', 'Motorcycle', 'MotorcyleRider', 'BicycleRider']
+    - num_classes: 5
+      class_names: ['Truck', 'Van', 'TrashCan', 'ConcreteTruck', 'Bus']
+  in_channels: 768
+  bbox_coder:
+    type: 'CenterPointBBoxCoder'
+    pc_range: [-54.0, -54.0, -5.0, 54.0, 54.0, 3.0]
+    voxel_size: [0.1, 0.1, 0.2]
+    out_size_factor: 16
+    post_center_range: [-61.2, -61.2, -10.0, 61.2, 61.2, 10.0]
+    max_num: 200
+    score_threshold: 0.05
+    code_size: 9
+  common_heads:
+    reg: [2, 2]
+    height: [1, 2]
+    dim: [3, 2]
+    rot: [3, 2]
+  separate_head:
+    type: 'SeparateHead'
+    init_bias: -2.19
+    final_kernel: 3
+  loss_cls:
+    type: 'mmdet.GaussianFocalLoss'
+    reduction: 'mean'
+  loss_bbox:
+    type: 'mmdet.L1Loss'
+    reduction: 'mean'
+    loss_weight: 0.25
+  norm_bbox: true
+  conv_cfg:
+    type: 'Conv2d'
+  norm_cfg:
+    type: 'BN2d'
+  train_cfg:
+    max_objs: 200
+    dense_reg: 1
+    grid_size: [1024, 1024, 41]
+    point_cloud_range: [-54.0, -54.0, -5.0, 54.0, 54.0, 3.0]
+    voxel_size: [0.1, 0.1, 0.2]
+    out_size_factor: 16
+    gaussian_overlap: 0.1
+    min_radius: 1
+    code_weights: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  test_cfg:
+    post_center_range: [-61.2, -61.2, -10.0, 61.2, 61.2, 10.0]
+    max_num: 200
+    score_threshold: 0.05
+    voxel_size: [0.1, 0.1, 0.2]
+    point_cloud_range: [-54.0, -54.0, -5.0, 54.0, 54.0, 3.0]
+    out_size_factor: 16
+    min_radius: [2, 2, 2]
+
+train:
+  epochs: 2
+  batch_size: 1
+  

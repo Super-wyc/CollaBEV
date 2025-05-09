@@ -1,0 +1,13 @@
+# 忽略data目录下的所有文件和子目录
+/data/
+/checkpoints/
+
+# Python相关忽略
+__pycache__/
+
+# 编译
+build/
+model/transfrom/bev_pool/bev_pool_ext.cpython-38-x86_64-linux-gnu.so
+model/transfrom/bev_pool/bev_pool.egg-info
+model/transfrom/voxel/voxel_layer.egg-info
+model/transfrom/voxel/voxel_layer.cpython-38-x86_64-linux-gnu.so
