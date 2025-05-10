@@ -18,7 +18,7 @@ from mmdet3d.models.middle_encoders.bev_sparse_encoder import BEVFusionSparseEnc
 class CollaBEV(nn.Module):
     def __init__(self, cfg):
         super().__init__()
-        # 图像编码
+
         if cfg['img_backbone']['type'] == 'MobileNetV3':
             self.img_backbone = MultiResolutionMobileNetV3(eval(cfg['img_backbone']['out_indices']))
         elif cfg['img_backbone']['type'] == 'ResNet':
@@ -31,7 +31,6 @@ class CollaBEV(nn.Module):
         self.img_neck = FPN(in_channels=cfg['img_neck']['in_channels'], out_channels=cfg['img_neck']['out_channels'], num_outs=cfg['img_neck']['num_outs'])
 
         if 'deepth_lss' in cfg:
-        # if False:
             self.deepth_lss_module = DepthLSSTransform(
                 in_channels=cfg['deepth_lss']['in_channels'],
                 out_channels=cfg['deepth_lss']['out_channels'],
@@ -84,7 +83,7 @@ class CollaBEV(nn.Module):
         
         return pts_features
 
-    def img_featrue_extractor(self, img):
+    def img_feature_extractor(self, img):
         B, N, C, H, W = img.shape
         img = img.view(B*N, C, H, W).contiguous()
         img = self.img_backbone(img)
@@ -102,7 +101,6 @@ class CollaBEV(nn.Module):
         for k, res in enumerate(points):
             ret = self.voxelization(res)
             if len(ret) == 3:
-                # hard voxelize
                 f, c, n = ret
             else:
                 assert len(ret) == 2
@@ -147,7 +145,7 @@ class CollaBEV(nn.Module):
                 cam2lidars, lidar2cams, intrinsics,
                 img_aug_matrix, lidar_aug_matrix
                 ):
-        img_features = self.img_featrue_extractor(img)
+        img_features = self.img_feature_extractor(img)
 
         img_features = self.deepth_lss(
             img_features=img_features,
@@ -169,6 +167,3 @@ class CollaBEV(nn.Module):
     
     def loss(self, pred, target):
         return self.head.loss(pred, target)
-        # return sum(value for key, value in self.head.loss(pred, target).items() if 'loss' in key)
-
-# todo: 模型loss、评估等

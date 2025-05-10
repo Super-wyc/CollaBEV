@@ -11,7 +11,6 @@ class MultiResolutionMobileNetV3(nn.Module):
         """
         Args:
             out_indices (tuple): 指定需要输出的特征层索引。
-                默认值 (3, 6, 12) 表示从 MobileNetV3 的中间层提取 4 个不同分辨率的特征图。
         """
         super().__init__()
         

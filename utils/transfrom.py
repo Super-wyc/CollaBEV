@@ -1,3 +1,6 @@
+# Author: Runsheng Xu <rxx3386@ucla.edu>, Hao Xiang <haxiang@g.ucla.edu>,
+# License: TDG-Attribution-NonCommercial-NoDistrib
+
 import open3d as o3d
 import numpy as np
 import matplotlib.pyplot as plt
